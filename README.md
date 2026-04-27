@@ -1,39 +1,43 @@
-# 🗂 空目录清理工具 (Empty Directory Cleaner)
+# 🧰 FileKit — 文件清理工具箱
 
-一个基于 Python + Tkinter 的桌面 GUI 工具，递归扫描指定文件夹，**一键删除所有空目录**。
+一个基于 Python + Tkinter 的桌面 GUI 工具箱，提供 **5 大功能 Tab**，覆盖空目录清理、空文件删除、重复文件去重、按后缀批量删除、文件夹大小统计，业务逻辑与 GUI 完全解耦，子线程执行，界面不卡死。
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## ✨ 功能特性
+## ✨ 功能一览
 
-- 📁 支持手动输入路径或点击「浏览」选择目录
-- 🔄 自底向上递归扫描，正确处理多层嵌套空目录
-- 🖥 实时日志滚动显示每一条删除记录
-- 🧵 子线程执行，界面不卡死
-- ✅ / ❌ 区分成功与失败，底部汇总统计
+| Tab | 功能 | 说明 |
+|---|---|---|
+| 🗂 空目录 | 删除空目录 | 自底向上递归，正确处理多层嵌套空目录 |
+| 📄 空文件 | 删除空文件 | 递归扫描并删除大小为 0 的文件 |
+| ♻️ 重复文件 | 去重删除 | 先按大小分组再 MD5 比对，保留每组中最先发现的一个 |
+| 🗑 按后缀 | 批量删除 | 支持指定文件名（如 `.DS_Store`）或后缀（如 `.log`），逗号分隔多个 |
+| 📊 大小统计 | 文件夹统计 | 输出总大小及第一层子目录占比（含可视化进度条） |
 
 ---
 
 ## 🖼 界面预览
 
 ```
-┌─────────────────────────────────────────┐
-│  🗂  空目录清理工具                      │  ← 标题栏
-├─────────────────────────────────────────┤
-│  目标文件夹路径                          │
-│  [/path/to/folder    ] [浏览…] [▶ 执行] │  ← 输入区
-├─────────────────────────────────────────┤
-│  正在扫描：/path/to/folder               │  ← 状态栏
-├─────────────────────────────────────────┤
-│  执行日志                    [清除日志]  │
-│  🚀 开始扫描：/path/to/folder            │
-│  ✅ 已删除：/path/to/folder/empty_sub   │  ← 日志区
-│  ✨ 完成！共删除 3 个空目录，失败 0 个   │
-├─────────────────────────────────────────┤
-│  ✅ 已删除 3 个空目录  |  ❌ 失败 0 个   │  ← 统计栏
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  🧰  FileKit — 文件清理工具箱                     │
+├────────┬────────┬──────────┬────────┬─────────────┤
+│ 🗂空目录│📄空文件 │♻️重复文件 │🗑按后缀 │ 📊大小统计  │  ← Tab 栏
+├────────┴────────┴──────────┴────────┴─────────────┤
+│  目标文件夹路径                                    │
+│  [/path/to/folder        ] [浏览…] [▶  执行清理]  │
+├──────────────────────────────────────────────────┤
+│  正在处理：/path/to/folder                        │  ← 状态栏
+├──────────────────────────────────────────────────┤
+│  执行日志                           [清除日志]    │
+│  🚀 开始：/path/to/folder                        │
+│  ✅ 已删除空目录：/path/to/folder/empty_sub      │  ← 日志区
+│  ✨ 完成！✅ 已删除 3 个空目录 | ❌ 失败 0 个    │
+├──────────────────────────────────────────────────┤
+│  ✅ 已删除 3 个空目录  |  ❌ 失败 0 个            │  ← 统计栏
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -64,19 +68,19 @@ pip install pyinstaller
 **第二步：执行打包命令**
 
 ```bash
-# Windows → 生成 dist/空目录清理工具.exe
-pyinstaller --onefile --windowed --name "空目录清理工具" --icon app_icon.ico app.py
+# Windows → 生成 dist/FileKit.exe
+pyinstaller --onefile --windowed --name "FileKit" --icon app_icon.ico app.py
 
-# macOS → 生成 dist/空目录清理工具.app
-pyinstaller --onedir --windowed --name "空目录清理工具" --icon app_icon.icns app.py
+# macOS → 生成 dist/FileKit.app
+pyinstaller --onedir --windowed --name "FileKit" --icon app_icon.icns app.py
 ```
 
 **第三步：找到生成文件**
 
 ```
 dist/
-└── 空目录清理工具.exe   ← Windows 双击此文件运行
-└── 空目录清理工具.app   ← macOS 双击此文件运行
+├── FileKit.exe   ← Windows 双击此文件运行
+└── FileKit.app   ← macOS 双击此文件运行
 ```
 
 > 打包完成后 `build/` 和 `*.spec` 为临时文件，可以删除。
@@ -95,6 +99,42 @@ dist/
 
 ---
 
+## 🔧 架构说明
+
+FileKit 的核心设计理念是**业务逻辑与 GUI 完全解耦**：
+
+- **5 个纯函数**（`delete_empty_dirs` / `delete_empty_files` / `delete_duplicate_files` / `delete_by_extension` / `calc_folder_size`）只依赖 `os` 标准库，可独立调用或单独测试，与任何 UI 无关。
+
+- **`BaseTab` 基类**统一管理路径输入栏、运行按钮状态切换、子线程启动、日志写入逻辑。各 Tab 子类只需实现 `_worker()` 方法，可选覆盖 `_extra_ui()`（插入额外控件）和 `_confirm()`（弹出确认框）。
+
+```
+app.py
+├── 业务逻辑层（纯函数，无 UI 依赖）
+│   ├── delete_empty_dirs()
+│   ├── delete_empty_files()
+│   ├── delete_duplicate_files()
+│   ├── delete_by_extension()
+│   └── calc_folder_size()
+│
+├── 公共 UI 组件
+│   ├── make_path_bar()
+│   ├── make_log_area()
+│   └── log_append()
+│
+├── BaseTab（基类）
+│   ├── 路径输入 / 浏览按钮
+│   ├── 运行按钮状态管理
+│   ├── 子线程启动
+│   └── 日志写入
+│
+├── TabEmptyDir / TabEmptyFile / TabDuplicates
+├── TabByExtension / TabFolderSize
+│
+└── App（主窗口 + Notebook）
+```
+
+---
+
 ## ❓ 常见问题
 
 **Q：打包后启动很慢（要等 10 秒以上）？**
@@ -102,16 +142,16 @@ dist/
 `--onefile` 模式每次启动会先解压到临时目录，属于正常现象。如希望秒开，改用 `--onedir` 模式（生成一个文件夹而非单文件）：
 
 ```bash
-pyinstaller --onedir --windowed --name "空目录清理工具" --icon app_icon.ico app.py
+pyinstaller --onedir --windowed --name "FileKit" --icon app_icon.ico app.py
 ```
 
 **Q：Windows 提示「无法验证发布者」或被杀毒软件拦截？**
 
-PyInstaller 打包的程序在 Windows 首次运行时可能触发 SmartScreen 警告，选择「仍要运行」即可，这是未签名程序的通用问题，与本工具本身无关。
+PyInstaller 打包的程序在 Windows 首次运行时可能触发 SmartScreen 警告，选择「仍要运行」即可，这是未签名程序的通用问题。
 
 **Q：macOS 提示「无法打开，因为无法验证开发者」？**
 
-右键点击 `.app` → 选择「打开」→ 确认，之后就可以正常运行。
+右键点击 `.app` → 选择「打开」→ 确认，之后可正常运行。
 
 **Q：能在 Windows 上打包出 macOS 的 .app 文件吗？**
 
@@ -151,18 +191,6 @@ empty-dir-cleaner/
 ```
 
 ---
-
-## 🔧 核心逻辑说明
-
-程序使用 `os.walk(topdown=False)` **自底向上**遍历目录树，确保先处理最深层的空目录，再向上判断父目录是否因此变空，从而正确处理多层嵌套的空目录结构。
-
-```python
-for dirpath, dirnames, filenames in os.walk(root_path, topdown=False):
-    if not os.listdir(dirpath):  # 目录为空
-        os.rmdir(dirpath)        # 删除
-```
-
-GUI 使用 `threading.Thread` + `self.after()` 回调机制，在子线程中执行文件操作，在主线程中更新界面，避免界面冻结。
 
 > ⚠️ **注意：** 删除操作不可撤销，请确认目标路径正确后再执行。根目录本身不会被删除。
 
