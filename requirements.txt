@@ -1,0 +1,4 @@
+# 运行源码无需额外依赖（Tkinter 为 Python 标准库）
+# 仅打包时需要安装 PyInstaller：
+#   pip install pyinstaller
+pyinstaller>=6.0
