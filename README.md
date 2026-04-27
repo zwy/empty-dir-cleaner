@@ -68,7 +68,7 @@ pip install pyinstaller
 pyinstaller --onefile --windowed --name "空目录清理工具" --icon app_icon.ico app.py
 
 # macOS → 生成 dist/空目录清理工具.app
-pyinstaller --onefile --windowed --name "空目录清理工具" --icon app_icon.icns app.py
+pyinstaller --onedir --windowed --name "空目录清理工具" --icon app_icon.icns app.py
 ```
 
 **第三步：找到生成文件**
